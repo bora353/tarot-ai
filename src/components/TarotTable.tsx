@@ -1,3 +1,5 @@
+// components/TarotTable.tsx
+
 import React, { useState } from "react";
 import { tarotCards } from "../data/tarotCards";
 import TarotCard from "./TarotCard";
@@ -11,15 +13,11 @@ interface TarotTableProps {
 
 const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const [selected, setSelected] = useState<number[]>([]);
-  // 알림 메시지용 상태를 추가합니다.
   const [modalOpen, setModalOpen] = useState(false);
   const [result, setResult] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  // 알림 메시지 상태 추가
-  const [modalMessage, setModalMessage] = useState<string | undefined>(
-    undefined
-  );
+  const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);
 
   const centerX = 250;
   const centerY = 200;
@@ -31,7 +29,7 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       setModalOpen(true);
       return;
     }
-
+    
     if (selected.length >= 3) return;
     if (!selected.includes(id)) {
       setSelected([...selected, id]);
@@ -44,14 +42,13 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       setModalOpen(true);
       return;
     }
-
-    // API 호출 전 기존 모달 상태 초기화
+    
     setModalMessage(undefined);
     setModalOpen(true);
     setLoading(true);
     setError(undefined);
     setResult(undefined);
-
+  
     try {
       console.log("해석 버튼이 클릭되었습니다. API 호출을 시작합니다.");
       const selectedCards = tarotCards.filter((c) => selected.includes(c.id));
@@ -60,29 +57,24 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, cards: selectedCards }),
       });
+  
 
       const text = await res.text();
 
       if (!res.ok) {
-        // 이 부분에 오류 처리 로직을 추가합니다.
-        const text = await res.text();
-        const data = JSON.parse(text);
-        
-        // HTTP 상태 코드 429(Too Many Requests)를 확인합니다.
         if (res.status === 429) {
           setError("AI가 너무 바빠요! 잠시 후 다시 시도해 주세요.");
         } else {
           // 429 에러가 아닐 경우, 기존 오류 메시지를 사용합니다.
-          throw new Error(`서버 오류: ${data.detail || text}`);
+          throw new Error(`서버 오류: ${text}`);
         }
-      } else {
-        const data = await res.json();
-        setResult(data.result);
-        console.log("API 호출 성공!");
       }
+      const data = JSON.parse(text);
+      setResult(data.result);
+      console.log("API 호출 성공!");
     } catch (e: any) {
       console.error("API 호출 중 오류 발생:", e);
-      setError(e.message || "AI 해석에 실패했습니다.");
+      setError(e.message || "AI 해석에 실패했습니다. (응답 형식을 확인하세요.)");
     } finally {
       setLoading(false);
       console.log("로딩 상태가 false로 변경되었습니다.");
@@ -92,12 +84,10 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const canClickAnyCard = !!question;
 
   return (
-    <div className="relative w-[500px] h-[400px] mx-auto my-8 flex items-center justify-center">
-      {/* 안내 문구 */}
+    <div className="relative w-full max-w-[500px] h-[400px] mx-auto my-8 flex items-center justify-center">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 text-base font-semibold text-pink-700 bg-white/80 px-4 py-1 rounded shadow">
         카드는 3장만 뽑으세요
       </div>
-      {/* 해석하기 버튼 */}
       <button
         className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-pink-500 text-white font-bold px-6 py-2 rounded shadow disabled:bg-gray-300 disabled:text-gray-400 transition"
         disabled={selected.length !== 3 || loading || !question}
@@ -106,7 +96,6 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       >
         해석하기
       </button>
-      {/* 카드들 */}
       {tarotCards.map((card, i) => {
         const angle = Math.PI * 2 * (i / total) - Math.PI / 2;
         const x = centerX + CARD_RADIUS * Math.cos(angle) - 40;
@@ -134,14 +123,11 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
           </div>
         );
       })}
-      {/* 해석 결과 모달 */}
       <ResultModal
         open={modalOpen}
-        // 알림 메시지를 result prop으로 전달
         result={result || modalMessage}
         loading={loading}
         error={error}
-        // 모달 닫기 버튼 누르면 초기화
         onClose={() => {
           setModalOpen(false);
           setModalMessage(undefined);
