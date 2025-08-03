@@ -1,6 +1,6 @@
 // components/TarotTable.tsx
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { tarotCards } from "../data/tarotCards";
 import TarotCard from "./TarotCard";
 import ResultModal from "./ResultModal";
@@ -19,9 +19,16 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);
 
-  const centerX = 250;
-  const centerY = 200;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [center, setCenter] = useState({ x: 0, y: 0 });
   const total = tarotCards.length;
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const { offsetWidth, offsetHeight } = containerRef.current;
+      setCenter({ x: offsetWidth / 2, y: offsetHeight / 2 });
+    }
+  }, []);
 
   const handleCardClick = (id: number) => {
     if (!question) {
@@ -84,8 +91,11 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const canClickAnyCard = !!question;
 
   return (
-    <div className="relative w-full max-w-[500px] h-[400px] mx-auto my-8 flex items-center justify-center">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 text-base font-semibold text-pink-700 bg-white/80 px-4 py-1 rounded shadow">
+    <div
+    ref={containerRef}
+    className="relative w-full max-w-[500px] h-[400px] mx-auto my-8 flex items-center justify-center"
+  >
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 text-base font-semibold text-pink-700 bg-white/80 px-4 py-1 rounded shadow">
         카드는 3장만 뽑으세요
       </div>
       <button
@@ -98,8 +108,8 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       </button>
       {tarotCards.map((card, i) => {
         const angle = Math.PI * 2 * (i / total) - Math.PI / 2;
-        const x = centerX + CARD_RADIUS * Math.cos(angle) - 40;
-        const y = centerY + CARD_RADIUS * Math.sin(angle) - 64;
+        const x = center.x + CARD_RADIUS * Math.cos(angle) - 40;
+        const y = center.y + CARD_RADIUS * Math.sin(angle) - 64;
         const flipped = selected.includes(card.id);
         const isCardActive = !flipped && selected.length < 3;
 
