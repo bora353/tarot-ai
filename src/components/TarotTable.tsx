@@ -11,6 +11,16 @@ interface TarotTableProps {
   question: string;
 }
 
+// Fisher-Yates 셔플 알고리즘 함수
+const shuffleArray = (array: TarotCard[]) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const [selected, setSelected] = useState<number[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -18,10 +28,15 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);
+  const [shuffledCards, setShuffledCards] = useState<TarotCard[]>([]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [center, setCenter] = useState({ x: 0, y: 0 });
   const total = tarotCards.length;
+
+  useEffect(() => {
+    setShuffledCards(shuffleArray(tarotCards));
+  }, []);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -29,6 +44,7 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       setCenter({ x: offsetWidth / 2, y: offsetHeight / 2 });
     }
   }, []);
+
 
   const handleCardClick = (id: number) => {
     if (!question) {
@@ -106,7 +122,7 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       >
         해석하기
       </button>
-      {tarotCards.map((card, i) => {
+      {shuffledCards.map((card, i) => {
         const angle = Math.PI * 2 * (i / total) - Math.PI / 2;
         const x = center.x + CARD_RADIUS * Math.cos(angle) - 40;
         const y = center.y + CARD_RADIUS * Math.sin(angle) - 64;
