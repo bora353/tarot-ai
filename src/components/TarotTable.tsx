@@ -27,7 +27,6 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
 
   const handleCardClick = (id: number) => {
     if (!question) {
-      // alert 대신 모달로 메시지를 표시합니다.
       setModalMessage("질문을 먼저 입력해 주세요.");
       setModalOpen(true);
       return;
@@ -41,7 +40,6 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
 
   const handleInterpret = async () => {
     if (!question) {
-      // alert 대신 모달로 메시지를 표시합니다.
       setModalMessage("질문을 먼저 입력해 주세요.");
       setModalOpen(true);
       return;
@@ -66,12 +64,22 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       const text = await res.text();
 
       if (!res.ok) {
-        throw new Error(`서버 오류: ${text}`);
+        // 이 부분에 오류 처리 로직을 추가합니다.
+        const text = await res.text();
+        const data = JSON.parse(text);
+        
+        // HTTP 상태 코드 429(Too Many Requests)를 확인합니다.
+        if (res.status === 429) {
+          setError("AI가 너무 바빠요! 잠시 후 다시 시도해 주세요.");
+        } else {
+          // 429 에러가 아닐 경우, 기존 오류 메시지를 사용합니다.
+          throw new Error(`서버 오류: ${data.detail || text}`);
+        }
+      } else {
+        const data = await res.json();
+        setResult(data.result);
+        console.log("API 호출 성공!");
       }
-
-      const data = JSON.parse(text);
-      setResult(data.result);
-      console.log("API 호출 성공!");
     } catch (e: any) {
       console.error("API 호출 중 오류 발생:", e);
       setError(e.message || "AI 해석에 실패했습니다.");
@@ -98,13 +106,6 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
       >
         해석하기
       </button>
-      {/* 원형 배경 이미지 */}
-      <img
-        src="/tarot-images/circle_bg.png"
-        alt="원형 배경"
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] pointer-events-none opacity-80"
-        style={{ zIndex: 0 }}
-      />
       {/* 카드들 */}
       {tarotCards.map((card, i) => {
         const angle = Math.PI * 2 * (i / total) - Math.PI / 2;
@@ -121,7 +122,7 @@ const TarotTable: React.FC<TarotTableProps> = ({ question }) => {
               left: x,
               top: y,
               zIndex: flipped ? 10 : 1,
-              opacity: canClickAnyCard ? (isCardActive ? 1 : 0.5) : 0.5,
+              opacity: selected.includes(card.id) ? 1 : (selected.length >= 3 && !selected.includes(card.id) ? 0.5 : 1),
             }}
           >
             <TarotCard

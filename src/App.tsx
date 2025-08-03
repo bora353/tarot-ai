@@ -19,6 +19,7 @@ function App() {
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         placeholder="질문을 입력하세요 :)"
+        maxLength={50}
         className="w-[90%] max-w-md p-3 mb-8 text-center text-gray-700 bg-white border border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-300"
       />
 
