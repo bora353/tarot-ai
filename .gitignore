@@ -1,0 +1,6 @@
+# node_modules, build, 환경설정 등
+node_modules/
+dist/
+build/
+.env
+.vercel
